@@ -434,7 +434,7 @@ static int isprime(void *a, int b, int *c)
 
 #if defined(LTC_MECC) && defined(LTC_MECC_ACCEL)
 
-static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *modulus, void *Mp)
+static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *ma, void *modulus, void *Mp)
 {
    fp_int t1, t2;
    fp_digit mp;
@@ -443,6 +443,7 @@ static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *modulu
    LTC_ARGCHK(R       != NULL);
    LTC_ARGCHK(modulus != NULL);
    LTC_ARGCHK(Mp      != NULL);
+   LTC_UNUSED_PARAM(ma); /* XXX-FIXME this is a temporary hack !!!!! */
 
    mp = *((fp_digit*)Mp);
 
@@ -551,7 +552,7 @@ static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *modulu
    @param mp       The "b" value from montgomery_setup()
    @return CRYPT_OK on success
 */
-static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R, void *modulus, void *Mp)
+static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R, void *ma, void *modulus, void *Mp)
 {
    fp_int  t1, t2, x, y, z;
    fp_digit mp;
@@ -561,6 +562,7 @@ static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R
    LTC_ARGCHK(R       != NULL);
    LTC_ARGCHK(modulus != NULL);
    LTC_ARGCHK(Mp      != NULL);
+   LTC_UNUSED_PARAM(ma); /* XXX-FIXME this is a temporary hack !!!!! */
 
    mp = *((fp_digit*)Mp);
 
