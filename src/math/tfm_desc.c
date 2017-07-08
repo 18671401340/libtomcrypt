@@ -443,7 +443,6 @@ static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *ma, vo
    LTC_ARGCHK(R       != NULL);
    LTC_ARGCHK(modulus != NULL);
    LTC_ARGCHK(Mp      != NULL);
-   LTC_UNUSED_PARAM(ma); /* XXX-FIXME this has to be fixed to handle curves y^2 = x^3 + ax + b */
 
    mp = *((fp_digit*)Mp);
 
@@ -454,6 +453,14 @@ static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *ma, vo
       fp_copy(P->x, R->x);
       fp_copy(P->y, R->y);
       fp_copy(P->z, R->z);
+   }
+
+   if (ltc_ecc_is_point_at_infinity(P, modulus)) {
+      /* if P is point at infinity >> Result = point at infinity */
+      ltc_mp.set_int(R->x, 1);
+      ltc_mp.set_int(R->y, 1);
+      ltc_mp.set_int(R->z, 0);
+      return CRYPT_OK;
    }
 
    /* t1 = Z * Z */
@@ -468,25 +475,26 @@ static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *ma, vo
       fp_sub(R->z, modulus, R->z);
    }
 
-   /* &t2 = X - T1 */
-   fp_sub(R->x, &t1, &t2);
-   if (fp_cmp_d(&t2, 0) == FP_LT) {
-      fp_add(&t2, modulus, &t2);
-   }
-   /* T1 = X + T1 */
-   fp_add(&t1, R->x, &t1);
-   if (fp_cmp(&t1, modulus) != FP_LT) {
-      fp_sub(&t1, modulus, &t1);
-   }
-   /* T2 = T1 * T2 */
-   fp_mul(&t1, &t2, &t2);
+   /* T2 = T1 * T1 */
+   fp_sqr(&t1, &t2);
    fp_montgomery_reduce(&t2, modulus, mp);
-   /* T1 = 2T2 */
-   fp_add(&t2, &t2, &t1);
+   /* T1 = T2 * a */
+   fp_mul(&t2, ma, &t1);
+   fp_montgomery_reduce(&t1, modulus, mp);
+   /* T2 = X * X */
+   fp_sqr(R->x, &t2);
+   fp_montgomery_reduce(&t2, modulus, mp);
+   /* T1 = T2 + T1 */
+   fp_add(&t1, &t2, &t1);
    if (fp_cmp(&t1, modulus) != FP_LT) {
       fp_sub(&t1, modulus, &t1);
    }
-   /* T1 = T1 + T2 */
+   /* T1 = T2 + T1 */
+   fp_add(&t1, &t2, &t1);
+   if (fp_cmp(&t1, modulus) != FP_LT) {
+      fp_sub(&t1, modulus, &t1);
+   }
+   /* T1 = T2 + T1 */
    fp_add(&t1, &t2, &t1);
    if (fp_cmp(&t1, modulus) != FP_LT) {
       fp_sub(&t1, modulus, &t1);
@@ -562,7 +570,6 @@ static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R
    LTC_ARGCHK(R       != NULL);
    LTC_ARGCHK(modulus != NULL);
    LTC_ARGCHK(Mp      != NULL);
-   /* XXX-FIXME this has to be fixed to handle curves y^2 = x^3 + ax + b */
 
    mp = *((fp_digit*)Mp);
 
@@ -571,6 +578,22 @@ static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R
    fp_init(&x);
    fp_init(&y);
    fp_init(&z);
+
+   if (ltc_ecc_is_point_at_infinity(P, modulus)) {
+      /* P is point at infinity >> Result = Q */
+      ltc_mp.copy(Q->x, R->x);
+      ltc_mp.copy(Q->y, R->y);
+      ltc_mp.copy(Q->z, R->z);
+      return CRYPT_OK;
+   }
+
+   if (ltc_ecc_is_point_at_infinity(Q, modulus)) {
+      /* Q is point at infinity >> Result = P */
+      ltc_mp.copy(P->x, R->x);
+      ltc_mp.copy(P->y, R->y);
+      ltc_mp.copy(P->z, R->z);
+      return CRYPT_OK;
+   }
 
    /* should we dbl instead? */
    fp_sub(modulus, Q->y, &t1);
