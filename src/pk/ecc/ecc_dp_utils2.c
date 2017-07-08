@@ -113,7 +113,7 @@ ltc_ecc_dp *ecc_dp_new_size(int size)
    return NULL;
 }
 
-void ecc_dp_free(ltc_ecc_dp *dp)
+void ecc_dp_free2(ltc_ecc_dp *dp)
 {
    if (dp == NULL) return;
    if (dp->prime != NULL) XFREE(dp->prime);
