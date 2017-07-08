@@ -443,7 +443,7 @@ static int tfm_ecc_projective_dbl_point(ecc_point *P, ecc_point *R, void *ma, vo
    LTC_ARGCHK(R       != NULL);
    LTC_ARGCHK(modulus != NULL);
    LTC_ARGCHK(Mp      != NULL);
-   LTC_UNUSED_PARAM(ma); /* XXX-FIXME this is a temporary hack !!!!! */
+   LTC_UNUSED_PARAM(ma); /* XXX-FIXME this has to be fixed to handle curves y^2 = x^3 + ax + b */
 
    mp = *((fp_digit*)Mp);
 
@@ -562,7 +562,7 @@ static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R
    LTC_ARGCHK(R       != NULL);
    LTC_ARGCHK(modulus != NULL);
    LTC_ARGCHK(Mp      != NULL);
-   LTC_UNUSED_PARAM(ma); /* XXX-FIXME this is a temporary hack !!!!! */
+   /* XXX-FIXME this has to be fixed to handle curves y^2 = x^3 + ax + b */
 
    mp = *((fp_digit*)Mp);
 
@@ -577,7 +577,7 @@ static int tfm_ecc_projective_add_point(ecc_point *P, ecc_point *Q, ecc_point *R
    if ( (fp_cmp(P->x, Q->x) == FP_EQ) &&
         (Q->z != NULL && fp_cmp(P->z, Q->z) == FP_EQ) &&
         (fp_cmp(P->y, Q->y) == FP_EQ || fp_cmp(P->y, &t1) == FP_EQ)) {
-        return tfm_ecc_projective_dbl_point(P, R, modulus, Mp);
+        return tfm_ecc_projective_dbl_point(P, R, ma, modulus, Mp);
    }
 
    fp_copy(P->x, &x);
